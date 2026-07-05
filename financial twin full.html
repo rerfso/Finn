@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Двойник — финансовый ИИ-советник</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root{
+    --sans: 'Inter', sans-serif;
+    --round: 'Quicksand', sans-serif;
+  }
+
+  body.light{
+    --bg:#F6F1E9;
+    --blob-a: rgba(255,183,140,0.55); --blob-b: rgba(150,210,190,0.55); --blob-c: rgba(190,175,235,0.45);
+    --glass: rgba(255,255,255,0.55); --glass-strong: rgba(255,255,255,0.75); --glass-border: rgba(255,255,255,0.9);
+    --nav-glass: rgba(255,255,255,0);
+    --nav-brightness: 1.02;
+    --nav-pill-bg: rgba(255,255,255,0.8);
+    --ink:#2B2620; --ink-soft: rgba(43,38,32,0.62); --ink-faint: rgba(43,38,32,0.4);
+    --peach:#E88C5A; --sage:#4F9E80; --sage-soft: rgba(79,158,128,0.16);
+    --coral:#D96C64; --coral-soft: rgba(217,108,100,0.14);
+    --amber:#D6A339; --amber-soft: rgba(214,163,57,0.16);
+    --lav:#8D7FC7; --lav-soft: rgba(141,127,199,0.14);
+    --track: rgba(43,38,32,0.12);
+    --shadow: 0 8px 32px rgba(120,90,60,0.14);
+  }
+  body.dark{
+    --bg:#1C1814;
+    --blob-a: rgba(232,140,90,0.28); --blob-b: rgba(79,158,128,0.24); --blob-c: rgba(141,127,199,0.22);
+    --glass: rgba(255,255,255,0.06); --glass-strong: rgba(255,255,255,0.1); --glass-border: rgba(255,255,255,0.14);
+    --nav-glass: rgba(255,255,255,0);
+    --nav-brightness: 1.35;
+    --nav-pill-bg: rgba(255,255,255,0.2);
+    --ink:#F3EEE6; --ink-soft: rgba(243,238,230,0.66); --ink-faint: rgba(243,238,230,0.42);
+    --peach:#F3A578; --sage:#7FCBA9; --sage-soft: rgba(127,203,169,0.16);
+    --coral:#E8908A; --coral-soft: rgba(232,144,138,0.16);
+    --amber:#E4BE72; --amber-soft: rgba(228,190,114,0.16);
+    --lav:#ADA0EA; --lav-soft: rgba(173,160,234,0.16);
+    --track: rgba(255,255,255,0.12);
+    --shadow: 0 8px 32px rgba(0,0,0,0.45);
+  }
+
+  body{ font-family:var(--sans); background:#0d0c09; min-height:100vh; display:flex; justify-content:center; align-items:flex-start; padding:24px; color:var(--ink); }
+
+  .rig{ display:flex; gap:28px; align-items:flex-start; }
+
+  .selector{ width:180px; padding-top:40px; position:sticky; top:24px; }
+  .selector h3{ font-weight:600; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(246,241,233,0.4); margin-bottom:14px; }
+  .sbtn{ display:flex; align-items:center; gap:9px; width:100%; text-align:left; background:transparent; border:none; border-left:2px solid rgba(246,241,233,0.15); color:rgba(246,241,233,0.55); font-size:13px; font-weight:500; padding:8px 0 8px 14px; cursor:pointer; transition:.2s; }
+  .sbtn svg{ width:15px; height:15px; flex-shrink:0; }
+  .sbtn:hover{ color:rgba(246,241,233,0.85); border-left-color:rgba(246,241,233,0.4); }
+  .sbtn.active{ color:#F6F1E9; border-left-color:#E88C5A; }
+
+  .phone{ width:390px; height:844px; background: linear-gradient(160deg,#2a2620,#141210); border-radius:54px; padding:12px; box-shadow: 0 30px 80px rgba(0,0,0,0.55); }
+  .screen{ width:100%; height:100%; border-radius:44px; overflow:hidden; position:relative; background: var(--bg); transition: background .4s ease; transform: translateZ(0); -webkit-mask-image: -webkit-radial-gradient(white, black); isolation:isolate; }
+  .blobs{ position:absolute; inset:-20%; filter: blur(60px); z-index:0; pointer-events:none; }
+  .blobs span{ position:absolute; border-radius:50%; animation: drift 22s ease-in-out infinite; }
+  .b1{ width:220px; height:220px; background:var(--blob-a); top:0; left:-40px; }
+  .b2{ width:260px; height:260px; background:var(--blob-b); top:280px; right:-70px; animation-delay:-7s; }
+  .b3{ width:220px; height:220px; background:var(--blob-c); bottom:-40px; left:0px; animation-delay:-14s; }
+  .b4{ width:180px; height:180px; background:var(--blob-a); bottom:-30px; right:-30px; animation-delay:-3s; }
+  @keyframes drift{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(20px,-15px) scale(1.08);} }
+
+  .island{ position:absolute; top:10px; left:50%; transform:translateX(-50%); width:120px; height:34px; background:#000; border-radius:18px; z-index:30; }
+  .status{ height:44px; display:flex; justify-content:space-between; align-items:center; padding:0 28px; font-size:13px; font-weight:600; color:var(--ink); position:relative; z-index:20; }
+  .theme-toggle{ display:flex; align-items:center; gap:5px; background:var(--glass); border:1px solid var(--glass-border); backdrop-filter: blur(14px); border-radius:20px; padding:6px 7px; cursor:pointer; }
+  .theme-toggle .icon{ width:10px; height:10px; opacity:.65; }
+  .theme-toggle .dot{ width:15px; height:15px; border-radius:50%; background:var(--peach); transition: transform .3s; flex-shrink:0; }
+  body.dark .theme-toggle .dot{ transform: translateX(14px); background: var(--lav); }
+  .bell-btn{ position:relative; width:30px; height:30px; border-radius:50%; background:var(--glass); border:1px solid var(--glass-border); backdrop-filter: blur(14px); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink); }
+  .bell-btn .icon{ width:14px; height:14px; }
+  .bell-btn:active{ transform: scale(0.92); }
+  .bell-dot{ position:absolute; top:6px; right:7px; width:6px; height:6px; border-radius:50%; background:var(--coral); border:1.5px solid var(--bg); }
+
+  .content{ height:calc(100% - 44px); overflow-y:auto; overflow-x:hidden; padding:8px 20px 108px; position:relative; z-index:10; }
+  .content::-webkit-scrollbar{ display:none; }
+
+  .view{ display:none; animation: rise .35s ease both; }
+  .view.active{ display:block; }
+  @keyframes rise{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .greet{ font-size:14px; color:var(--ink-soft); font-weight:500; margin-bottom:2px; }
+  .name{ font-family:var(--round); font-weight:700; font-size:28px; color:var(--ink); margin-bottom:16px; }
+
+  .hero-card{ padding:24px; margin-bottom:12px; text-align:center; }
+  .hero-label{ font-size:12.5px; color:var(--ink-soft); font-weight:600; margin-bottom:8px; }
+  .hero-amount{ font-family:var(--round); font-weight:700; font-size:44px; color:var(--ink); letter-spacing:-1px; }
+  .hero-sub{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+
+  .mini-strip{ display:flex; gap:8px; overflow-x:auto; margin-bottom:18px; padding-bottom:2px; }
+  .mini-strip::-webkit-scrollbar{ display:none; }
+  .mini-stat{ flex-shrink:0; display:flex; align-items:center; gap:7px; padding:9px 13px; border-radius:16px; background:var(--glass); border:1px solid var(--glass-border); font-size:12px; color:var(--ink-soft); cursor:pointer; white-space:nowrap; }
+  .mini-stat .icon{ width:14px; height:14px; opacity:.8; }
+  .mini-stat b{ color:var(--ink); font-weight:700; }
+  .mini-stat:not([onclick]){ cursor:default; }
+  .health-badge{ position:relative; width:44px; height:44px; cursor:pointer; flex-shrink:0; }
+  .health-badge .health-num{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--round); font-weight:700; font-size:13px; color:var(--ink); }
+  .health-badge:active{ transform: scale(0.94); }
+  .health-label{ font-size:11.5px; color:var(--ink-faint); line-height:1.4; margin:8px 0 18px; max-width:230px; }
+  .back{ position:sticky; top:0; z-index:6; width:32px; height:32px; border-radius:50%; background:var(--glass); backdrop-filter: blur(16px) saturate(160%); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:center; color:var(--ink); cursor:pointer; margin-bottom:12px; box-shadow: var(--shadow); }
+  .back:active{ transform: scale(0.92); }
+  .back .icon{ width:14px; height:14px; }
+
+  .card{ background:var(--glass); backdrop-filter: blur(16px) saturate(150%); -webkit-backdrop-filter: blur(16px) saturate(150%); border:1px solid var(--glass-border); border-radius:24px; box-shadow: var(--shadow); transition: transform .15s ease; }
+  [onclick]{ cursor:pointer; }
+  .row[onclick]:active, .pcard[onclick]:active, .bubble[onclick]:active, .balance[onclick]:active,
+  .goal-card:active, .rec-card:active, .settings-row:active, .bank-row:active, .pattern[onclick]:active, .cat-row[onclick]:active{ transform: scale(0.975); }
+
+  .icon{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; }
+  .icon svg{ width:100%; height:100%; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+
+  /* ---------- Dashboard ---------- */
+  .balance{ padding:22px; margin-bottom:16px; }
+  .balance-top{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-soft); font-weight:500; margin-bottom:12px; }
+  .balance-amount{ font-family:var(--round); font-weight:700; font-size:36px; color:var(--ink); letter-spacing:-0.5px; margin-bottom:10px; }
+  .balance-change{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:var(--sage-soft); border-radius:16px; color:var(--sage); font-size:13px; font-weight:600; }
+  .balance-change .icon{ width:12px; height:12px; }
+  .sparkline{ margin-top:16px; opacity:0.9; }
+
+  .pair{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .pcard{ padding:18px; }
+  .picon{ width:32px; height:32px; border-radius:10px; background:var(--glass-strong); display:flex; align-items:center; justify-content:center; margin-bottom:10px; color:var(--ink); }
+  .picon .icon{ width:17px; height:17px; }
+  .plabel{ font-size:11.5px; color:var(--ink-soft); font-weight:600; margin-bottom:6px; }
+  .pamount{ font-family:var(--round); font-weight:700; font-size:20px; color:var(--ink); margin-bottom:3px; }
+  .psub{ font-size:11.5px; color:var(--ink-faint); margin-bottom:10px; }
+  .bar{ height:6px; background:var(--track); border-radius:3px; overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:3px; background: linear-gradient(90deg, var(--peach), var(--sage)); }
+
+  .bubble{ padding:18px 18px 16px; margin-bottom:20px; cursor:pointer; }
+  .bubble-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .avatar{ width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,var(--peach),var(--lav)); flex-shrink:0; }
+  .bubble-name{ font-size:12.5px; font-weight:700; color:var(--ink-soft); }
+  .bubble-title{ font-family:var(--round); font-weight:700; font-size:16px; margin-bottom:8px; line-height:1.35; }
+  .bubble-text{ font-size:13.5px; color:var(--ink-soft); line-height:1.55; margin-bottom:12px; }
+  .bubble-save{ display:inline-flex; align-items:center; gap:6px; padding:7px 12px; background:var(--sage-soft); border-radius:14px; color:var(--sage); font-size:12.5px; font-weight:700; }
+
+  .section-title{ display:flex; align-items:center; justify-content:space-between; font-size:12px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; margin:20px 4px 12px; }
+  .section-title .more{ font-size:11.5px; text-transform:none; letter-spacing:0; font-weight:600; color:var(--peach); cursor:pointer; }
+
+  .row{ display:flex; align-items:center; gap:14px; padding:13px 16px; margin-bottom:8px; cursor:pointer; }
+  .row-mark{ width:40px; height:40px; border-radius:14px; background:var(--glass-strong); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--ink); }
+  .row-mark .icon{ width:18px; height:18px; }
+  .row-info{ flex:1; min-width:0; }
+  .row-name{ font-size:14.5px; font-weight:600; color:var(--ink); }
+  .row-date{ font-size:12px; color:var(--ink-faint); margin-top:2px; }
+  .row-amount{ font-size:14.5px; font-weight:700; color:var(--peach); white-space:nowrap; }
+  .row-amount.pos{ color:var(--sage); }
+  .chev{ width:14px; height:14px; color:var(--ink-faint); flex-shrink:0; }
+
+  /* ---------- Chips / filters ---------- */
+  .chips{ display:flex; gap:8px; overflow-x:auto; margin-bottom:16px; padding-bottom:2px; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chip{ flex-shrink:0; padding:8px 14px; border-radius:16px; background:var(--glass); border:1px solid var(--glass-border); font-size:12.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; }
+  .chip.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+  .stat{ padding:14px 12px; text-align:left; }
+  .stat-label{ font-size:10.5px; color:var(--ink-faint); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px; }
+  .stat-val{ font-family:var(--round); font-weight:700; font-size:17px; }
+
+  /* ---------- Donut ---------- */
+  .donut-wrap{ display:flex; align-items:center; gap:18px; padding:20px; margin-bottom:18px; }
+  .donut{ width:110px; height:110px; border-radius:50%; flex-shrink:0; position:relative;
+    background: conic-gradient(var(--peach) 0% 32%, var(--lav) 32% 52%, var(--sage) 52% 70%, var(--amber) 70% 85%, var(--track) 85% 100%); }
+  .donut::after{ content:''; position:absolute; inset:16px; border-radius:50%; background:var(--bg); }
+  .legend{ flex:1; display:flex; flex-direction:column; gap:9px; }
+  .leg-item{ display:flex; align-items:center; gap:8px; font-size:12.5px; }
+  .leg-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .leg-name{ flex:1; color:var(--ink-soft); font-weight:500; }
+  .leg-val{ font-weight:700; color:var(--ink); }
+
+  .cat-row{ padding:14px 16px; margin-bottom:8px; }
+  .cat-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .cat-name{ display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; }
+  .cat-name .row-mark{ width:32px; height:32px; border-radius:10px; }
+  .cat-name .icon{ width:15px; height:15px; }
+  .cat-amount{ font-weight:700; font-size:14px; }
+  .cat-change{ font-size:11px; color:var(--ink-faint); margin-top:2px; }
+
+  .day-label{ font-size:11.5px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.06em; margin:16px 4px 8px; }
+
+  /* ---------- Insights ---------- */
+  .sev-row{ display:flex; gap:10px; margin-bottom:18px; }
+  .sev{ flex:1; padding:14px 10px; text-align:center; }
+  .sev-num{ font-family:var(--round); font-weight:700; font-size:20px; margin-bottom:3px; }
+  .sev-lbl{ font-size:10.5px; color:var(--ink-faint); font-weight:600; }
+  .pattern{ padding:16px; margin-bottom:10px; border-left:3px solid var(--sage); cursor:pointer; }
+  .pattern.crit{ border-left-color: var(--coral); }
+  .pattern.mid{ border-left-color: var(--amber); }
+  .p-tag{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--coral); margin-bottom:6px; }
+  .pattern.mid .p-tag{ color:var(--amber); }
+  .pattern.good .p-tag{ color:var(--sage); }
+  .p-title{ font-weight:700; font-size:14.5px; margin-bottom:6px; }
+  .p-desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin-bottom:8px; }
+  .p-save{ font-size:12px; font-weight:700; color:var(--sage); }
+
+  /* ---------- Future / simulator ---------- */
+  .scenario-pair{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .scenario{ padding:16px; }
+  .scenario-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+  .scenario-lbl{ font-size:11.5px; color:var(--ink-soft); font-weight:600; margin-bottom:8px; }
+  .scenario-val{ font-family:var(--round); font-weight:700; font-size:20px; }
+  .chart-card{ padding:18px; margin-bottom:18px; }
+  .chart-legend{ display:flex; gap:16px; margin-top:10px; font-size:11.5px; color:var(--ink-soft); }
+  .slider-card{ padding:16px 18px; margin-bottom:10px; }
+  .slider-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .slider-name{ font-size:13.5px; font-weight:600; }
+  .slider-val{ font-size:13px; font-weight:700; color:var(--peach); }
+  input[type=range]{ -webkit-appearance:none; width:100%; height:6px; border-radius:3px; background:var(--track); outline:none; accent-color: var(--peach); }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--peach); border:3px solid var(--bg); box-shadow:0 2px 6px rgba(0,0,0,0.25); cursor:pointer; }
+  .slider-effect{ font-size:11.5px; color:var(--ink-faint); margin-top:8px; }
+
+  /* ---------- Goals ---------- */
+  .goal-card{ padding:16px; margin-bottom:12px; display:flex; gap:14px; align-items:center; cursor:pointer; }
+  .ring{ width:52px; height:52px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; position:relative; }
+  .ring-fg{ position:absolute; inset:0; border-radius:50%; }
+  .ring-num{ font-size:11px; font-weight:700; z-index:1; }
+  .goal-info{ flex:1; min-width:0; }
+  .goal-name{ font-weight:700; font-size:14.5px; margin-bottom:3px; }
+  .goal-sub{ font-size:12px; color:var(--ink-faint); }
+
+  /* ---------- Profile ---------- */
+  .profile-head{ display:flex; align-items:center; gap:14px; padding:18px; margin-bottom:16px; }
+  .p-avatar{ width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--peach),var(--lav)); flex-shrink:0; }
+  .p-name{ font-family:var(--round); font-weight:700; font-size:18px; }
+  .p-email{ font-size:12px; color:var(--ink-faint); margin-top:2px; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:18px; }
+  .settings-row{ display:flex; align-items:center; gap:14px; padding:14px 16px; cursor:pointer; }
+  .settings-row .row-mark{ width:34px; height:34px; border-radius:10px; }
+  .settings-row .icon{ width:16px; height:16px; }
+  .plan-badge{ padding:3px 9px; background:var(--amber-soft); color:var(--amber); border-radius:10px; font-size:10.5px; font-weight:700; }
+
+  /* ---------- Banks ---------- */
+  .bank-row{ display:flex; align-items:center; gap:14px; padding:14px 16px; margin-bottom:8px; cursor:pointer; }
+  .bank-logo{ width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:var(--round); font-weight:700; font-size:14px; color:#fff; flex-shrink:0; }
+  .bank-status{ display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--sage); margin-top:2px; }
+  .status-dot{ width:6px; height:6px; border-radius:50%; background:var(--sage); }
+  .status-dot.warn{ background:var(--amber); }
+  .add-bank{ display:flex; align-items:center; justify-content:center; gap:8px; padding:16px; border:1.5px dashed var(--ink-faint); border-radius:24px; color:var(--ink-soft); font-weight:600; font-size:13.5px; cursor:pointer; margin-top:6px; }
+
+  /* ---------- Recommendations ---------- */
+  .rec-card{ padding:16px; margin-bottom:10px; cursor:pointer; }
+  .rec-top{ display:flex; gap:12px; align-items:flex-start; margin-bottom:8px; }
+  .rec-title{ font-weight:700; font-size:14.5px; margin-bottom:4px; }
+  .rec-desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+  .rec-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+  .rec-save{ font-size:12px; font-weight:700; color:var(--sage); }
+  .rec-btn{ padding:7px 13px; background:var(--ink); color:var(--bg); border-radius:12px; font-size:11.5px; font-weight:700; border:none; cursor:pointer; }
+
+  /* ---------- Notifications ---------- */
+  .notif-row{ display:flex; gap:12px; padding:14px 16px; margin-bottom:8px; align-items:flex-start; }
+  .notif-text{ flex:1; }
+  .notif-title{ font-size:13.5px; font-weight:600; margin-bottom:3px; }
+  .notif-time{ font-size:11px; color:var(--ink-faint); }
+  .unread{ width:7px; height:7px; border-radius:50%; background:var(--peach); margin-top:6px; flex-shrink:0; }
+
+  /* ---------- AI assistant ---------- */
+  .chat-area{ display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
+  .msg{ max-width:82%; padding:12px 14px; border-radius:18px; font-size:13.5px; line-height:1.5; }
+  .msg.ai{ align-self:flex-start; background:var(--glass); border:1px solid var(--glass-border); border-bottom-left-radius:5px; }
+  .msg.me{ align-self:flex-end; background: var(--peach); color:#2B2620; border-bottom-right-radius:5px; font-weight:500; }
+  .chat-input{ display:flex; align-items:center; gap:10px; padding:8px 8px 8px 16px; position:sticky; bottom:0; }
+  .chat-input input{ flex:1; background:transparent; border:none; outline:none; font-size:13.5px; color:var(--ink); font-family:var(--sans); }
+  .chat-input input::placeholder{ color:var(--ink-faint); }
+  .send-btn{ width:36px; height:36px; border-radius:50%; background:var(--lav); border:none; display:flex; align-items:center; justify-content:center; color:#2B2620; cursor:pointer; flex-shrink:0; }
+  .send-btn .icon{ width:15px; height:15px; }
+  .suggest{ display:flex; gap:8px; overflow-x:auto; margin-bottom:14px; }
+  .suggest::-webkit-scrollbar{ display:none; }
+  .sug-chip{ flex-shrink:0; padding:9px 13px; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border); font-size:12px; color:var(--ink-soft); cursor:pointer; }
+
+  /* ---------- Nav ---------- */
+  .nav{ position:absolute; left:16px; right:16px; bottom:16px; height:64px; border-radius:32px; background:var(--nav-glass); backdrop-filter: blur(6px) saturate(110%) brightness(var(--nav-brightness)); -webkit-backdrop-filter: blur(6px) saturate(110%) brightness(var(--nav-brightness)); border:1px solid var(--glass-border); box-shadow: 0 8px 24px rgba(0,0,0,0.22); display:flex; justify-content:space-around; align-items:center; padding:0 4px; z-index:20; isolation:isolate; }
+  @supports (backdrop-filter: url(#lensDistort)) or (-webkit-backdrop-filter: url(#lensDistort)) {
+    .nav{ backdrop-filter: url(#lensDistort) brightness(var(--nav-brightness)); -webkit-backdrop-filter: url(#lensDistort) brightness(var(--nav-brightness)); }
+  }
+  .nav-pill{ position:absolute; top:6px; left:0; bottom:6px; width:20%; border-radius:24px; background:var(--nav-pill-bg); backdrop-filter: blur(22px) saturate(180%) brightness(var(--nav-brightness)); -webkit-backdrop-filter: blur(22px) saturate(180%) brightness(var(--nav-brightness)); border:1px solid var(--glass-border); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 10px rgba(0,0,0,0.15); z-index:0; opacity:0; transform-origin:left center; transform: translateX(0) scaleX(1); transition: transform .38s cubic-bezier(0.34,1.56,0.64,1), opacity .2s ease; will-change: transform; }
+  .nitem{ display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; color:var(--ink-faint); position:relative; z-index:1; flex:1; transition: color .25s; }
+  .nitem .icon{ width:20px; height:20px; transition: transform .3s cubic-bezier(0.34,1.56,0.64,1); }
+  .nitem .lbl{ font-size:10px; font-weight:600; transition: opacity .25s; }
+  .nitem.active{ color:var(--peach); }
+  .nitem.active .icon{ transform: translateY(-1px) scale(1.05); }
+
+  /* ---------- New: weather / question / tone / explain / tags / friends / widget ---------- */
+  .weather-card{ display:flex; align-items:center; gap:14px; padding:16px 18px; margin-bottom:16px; }
+  .weather-ic{ width:38px; height:38px; border-radius:12px; background:var(--lav-soft); display:flex; align-items:center; justify-content:center; color:var(--lav); flex-shrink:0; }
+  .weather-ic .icon{ width:19px; height:19px; }
+  .weather-title{ font-size:13.5px; font-weight:700; margin-bottom:3px; }
+  .weather-text{ font-size:12px; color:var(--ink-soft); line-height:1.4; }
+
+  .question-card{ padding:16px 18px; margin-bottom:20px; }
+  .question-text{ font-size:14px; font-weight:600; margin-bottom:12px; line-height:1.4; }
+  .question-actions{ display:flex; gap:8px; }
+  .qbtn{ flex:1; padding:9px; border-radius:12px; border:1px solid var(--glass-border); background:var(--glass-strong); font-size:13px; font-weight:700; color:var(--ink); cursor:pointer; }
+  .qbtn.yes{ background:var(--sage); color:#12241c; border-color:transparent; }
+
+  .tone-row{ display:flex; gap:8px; padding:14px 16px; flex-wrap:wrap; }
+  .tone-chip{ padding:8px 13px; border-radius:14px; background:var(--glass-strong); border:1px solid var(--glass-border); font-size:12px; font-weight:600; color:var(--ink-soft); cursor:pointer; }
+  .tone-chip.active{ background:var(--lav); color:#2B2620; border-color:transparent; }
+
+  .explain-link{ font-size:11.5px; font-weight:700; color:var(--lav); cursor:pointer; display:inline-block; margin-bottom:4px; }
+  .p-links{ display:flex; gap:16px; margin-bottom:4px; }
+  .p-links .explain-link{ margin-bottom:0; }
+  .explain-body{ display:none; font-size:12px; color:var(--ink-soft); line-height:1.6; padding-top:8px; margin-top:8px; border-top:1px solid var(--glass-border); }
+  .explain-body.open{ display:block; }
+  .explain-body b{ color:var(--ink); }
+
+  .tag{ display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:8px; margin-left:6px; vertical-align:middle; }
+  .tag.personal{ background:var(--lav-soft); color:var(--lav); }
+  .tag.shared{ background:var(--sage-soft); color:var(--sage); }
+
+  .future-msg{ padding:18px; margin-top:4px; }
+  .future-msg-head{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-faint); margin-bottom:8px; }
+  .future-msg-text{ font-family:var(--round); font-weight:600; font-size:15px; line-height:1.45; font-style:italic; }
+
+  .friend-row{ display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:12.5px; }
+  .friend-name{ width:52px; flex-shrink:0; color:var(--ink-soft); font-weight:600; }
+  .friend-bar-track{ flex:1; height:8px; background:var(--track); border-radius:4px; overflow:hidden; }
+  .friend-bar-fill{ height:100%; border-radius:4px; }
+  .friend-val{ width:34px; text-align:right; font-weight:700; flex-shrink:0; }
+  .invite-btn{ margin-top:6px; width:100%; padding:11px; border-radius:14px; background:var(--ink); color:var(--bg); border:none; font-size:13px; font-weight:700; cursor:pointer; }
+
+  .widget-mock{ width:100%; aspect-ratio:2.2/1; border-radius:20px; background:var(--glass-strong); border:1px solid var(--glass-border); padding:14px; display:flex; flex-direction:column; justify-content:space-between; }
+  .widget-mock .wtitle{ font-size:10.5px; color:var(--ink-faint); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+  .widget-mock .wval{ font-family:var(--round); font-weight:700; font-size:22px; }
+
+  /* SVG goal ring with animatable stroke */
+  .ring-svg{ width:52px; height:52px; flex-shrink:0; transform:rotate(-90deg); }
+  .ring-track{ fill:none; stroke:var(--track); stroke-width:4; }
+  .ring-fg{ fill:none; stroke-width:4; stroke-linecap:round; transition: stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1); }
+  .ring-wrap{ position:relative; width:52px; height:52px; flex-shrink:0; }
+  .ring-wrap .ring-num{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+
+  /* Telegram-style digest preview */
+  .tg-preview{ padding:0; overflow:hidden; margin-bottom:16px; }
+  .tg-head{ display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--glass-border); }
+  .tg-logo{ width:30px; height:30px; border-radius:9px; background:#2AABEE; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; }
+  .tg-logo .icon{ width:15px; height:15px; }
+  .tg-name{ font-size:13px; font-weight:700; }
+  .tg-sub{ font-size:10.5px; color:var(--ink-faint); }
+  .tg-body{ padding:16px; }
+  .tg-msg{ background:var(--glass-strong); border-radius:16px; border-bottom-left-radius:4px; padding:12px 14px; font-size:13px; line-height:1.6; color:var(--ink); }
+  .tg-time{ font-size:10px; color:var(--ink-faint); margin-top:6px; text-align:right; }
+
+  .placeholder{ text-align:center; padding:60px 20px; color:var(--ink-faint); font-size:14px; line-height:1.6; }
+
+  .switch{ width:42px; height:25px; border-radius:14px; background:var(--track); position:relative; flex-shrink:0; cursor:pointer; transition:.2s; }
+  .switch::after{ content:''; position:absolute; top:3px; left:3px; width:19px; height:19px; border-radius:50%; background:var(--bg); box-shadow:0 1px 3px rgba(0,0,0,0.3); transition:.2s; }
+  .switch.on{ background:var(--sage); }
+  .switch.on::after{ transform:translateX(17px); }
+  .empty-note{ padding:16px; text-align:center; color:var(--ink-faint); font-size:12.5px; line-height:1.6; margin-top:6px; }
+
+
+</style>
+</head>
+<body class="dark">
+<svg width="0" height="0" style="position:absolute; overflow:hidden;">
+  <filter id="lensDistort" x="-30%" y="-30%" width="160%" height="160%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.09" numOctaves="2" seed="9" result="noise"/>
+    <feGaussianBlur in="noise" stdDeviation="3" result="softNoise"/>
+    <feDisplacementMap in="SourceGraphic" in2="softNoise" scale="26" xChannelSelector="R" yChannelSelector="G"/>
+    <feGaussianBlur stdDeviation="0.6"/>
+  </filter>
+</svg>
+
+<div class="rig">
+  <div class="selector">
+    <h3>Все экраны</h3>
+    <button class="sbtn active" data-go="dashboard" data-nav="0"><span class="icon" data-icon="home"></span>Обзор</button>
+    <button class="sbtn" data-go="analytics" data-nav="1"><span class="icon" data-icon="chart"></span>Аналитика</button>
+    <button class="sbtn" data-go="insights" data-nav="2"><span class="icon" data-icon="spark"></span>Инсайты</button>
+    <button class="sbtn" data-go="future"><span class="icon" data-icon="trend"></span>Будущее</button>
+    <button class="sbtn" data-go="goals" data-nav="3"><span class="icon" data-icon="target"></span>Цели</button>
+    <button class="sbtn" data-go="profile" data-nav="4"><span class="icon" data-icon="user"></span>Профиль</button>
+    <button class="sbtn" data-go="banks"><span class="icon" data-icon="bank"></span>Банки</button>
+    <button class="sbtn" data-go="import-pick"><span class="icon" data-icon="plus"></span>Добавить банк (импорт)</button>
+    <button class="sbtn" data-go="notifs"><span class="icon" data-icon="bell"></span>Уведомления</button>
+    <button class="sbtn" data-go="ai"><span class="icon" data-icon="chat"></span>AI-ассистент</button>
+    <button class="sbtn" data-go="tone"><span class="icon" data-icon="spark"></span>Тон двойника</button>
+    <button class="sbtn" data-go="digest"><span class="icon" data-icon="send"></span>Сводка в мессенджер</button>
+    <button class="sbtn" data-go="personalize"><span class="icon" data-icon="target"></span>Траты в контексте целей</button>
+  </div>
+
+  <div class="phone">
+    <div class="screen">
+      <div class="blobs"><span class="b1"></span><span class="b2"></span><span class="b3"></span><span class="b4"></span></div>
+      <div class="island"></div>
+      <div class="status">
+        <span>9:41</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="bell-btn" onclick="go('notifs')">
+            <span class="icon" data-icon="bell"></span>
+            <span class="bell-dot"></span>
+          </div>
+          <div class="theme-toggle" onclick="toggleTheme()">
+            <span class="icon" data-icon="sun"></span>
+            <div class="dot"></div>
+            <span class="icon" data-icon="moon"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- 1. DASHBOARD -->
+        <div class="view active" id="dashboard">
+          <div class="greet">Доброе утро,</div>
+          <div class="name">Алексей</div>
+
+          <div class="card hero-card">
+            <div class="hero-label">Можно потратить сегодня</div>
+            <div class="hero-amount">2 640 ₽</div>
+            <div class="bar" style="height:5px; margin:12px 0 8px;"><div class="bar-fill" style="width:62%"></div></div>
+            <div class="hero-sub">из дневного лимита 3 500 ₽ · до зарплаты 9 дней</div>
+          </div>
+
+          <div class="mini-strip">
+            <div class="mini-stat" onclick="go('profile')"><span class="icon" data-icon="target"></span><span>Индекс <b>78</b></span></div>
+            <div class="mini-stat" onclick="go('profile')"><span class="icon" data-icon="arrowUp"></span><span>Активы <b>847 320 ₽</b></span></div>
+            <div class="mini-stat" onclick="go('analytics')"><span class="icon" data-icon="down"></span><span>Потрачено <b>42 350 ₽</b></span></div>
+            <div class="mini-stat"><span class="icon" data-icon="cloud"></span><span>Неделя: <b>непросто</b></span></div>
+          </div>
+
+          <div class="card bubble" onclick="go('insights')">
+            <div class="bubble-head"><div class="avatar"></div><div class="bubble-name">Твой двойник заметил</div></div>
+            <div class="bubble-title">Вчера ты потратил на 68% больше обычного</div>
+            <div class="bubble-text">Похоже, дело в пятничной усталости после дедлайна — с кем не бывает. Могу подсказывать, когда день выходит дороже обычного.</div>
+            <div class="bubble-save"><span class="icon" data-icon="spark" style="width:13px;height:13px;"></span>Экономия при лимите: 3 200 ₽/мес</div>
+          </div>
+
+          <div class="section-title">Ближайшие платежи <span class="more" onclick="event.stopPropagation();go('goals')">все цели</span></div>
+          <div class="card row" onclick="go('banks')">
+            <div class="row-mark"><span class="icon" data-icon="home2"></span></div>
+            <div class="row-info"><div class="row-name">ЖКХ</div><div class="row-date">5 июля</div></div>
+            <div class="row-amount">8 500 ₽</div>
+          </div>
+          <div class="card row" onclick="go('banks')">
+            <div class="row-mark"><span class="icon" data-icon="phone"></span></div>
+            <div class="row-info"><div class="row-name">МТС</div><div class="row-date">10 июля</div></div>
+            <div class="row-amount">600 ₽</div>
+          </div>
+          <div class="card row" onclick="go('insights')">
+            <div class="row-mark"><span class="icon" data-icon="film"></span></div>
+            <div class="row-info"><div class="row-name">Кинопоиск</div><div class="row-date">15 июля · не используешь 2 мес</div></div>
+            <div class="row-amount">399 ₽</div>
+          </div>
+        </div>
+
+        <!-- 2. ANALYTICS -->
+        <div class="view" id="analytics">
+          <div class="name">Аналитика</div>
+          <div class="chips">
+            <div class="chip">Неделя</div><div class="chip active">Месяц</div><div class="chip">Квартал</div><div class="chip">Год</div><div class="chip">Период</div>
+          </div>
+          <div class="stat-row">
+            <div class="card stat"><div class="stat-label">Доходы</div><div class="stat-val" style="color:var(--sage)">180 000 ₽</div></div>
+            <div class="card stat"><div class="stat-label">Расходы</div><div class="stat-val" style="color:var(--peach)">124 700 ₽</div></div>
+            <div class="card stat"><div class="stat-label">Сбережения</div><div class="stat-val">30.7%</div></div>
+          </div>
+
+          <div class="card donut-wrap">
+            <div class="donut"></div>
+            <div class="legend">
+              <div class="leg-item"><span class="leg-dot" style="background:var(--peach)"></span><span class="leg-name">Продукты</span><span class="leg-val">32%</span></div>
+              <div class="leg-item"><span class="leg-dot" style="background:var(--lav)"></span><span class="leg-name">Транспорт</span><span class="leg-val">20%</span></div>
+              <div class="leg-item"><span class="leg-dot" style="background:var(--sage)"></span><span class="leg-name">Рестораны</span><span class="leg-val">18%</span></div>
+              <div class="leg-item"><span class="leg-dot" style="background:var(--amber)"></span><span class="leg-name">Подписки</span><span class="leg-val">15%</span></div>
+              <div class="leg-item"><span class="leg-dot" style="background:var(--track)"></span><span class="leg-name">Другое</span><span class="leg-val">15%</span></div>
+            </div>
+          </div>
+
+          <div class="section-title">Категории</div>
+          <div class="card cat-row" onclick="go('insights')">
+            <div class="cat-top">
+              <div class="cat-name"><div class="row-mark"><span class="icon" data-icon="cart"></span></div>Продукты</div>
+              <div style="text-align:right"><div class="cat-amount">39 900 ₽</div><div class="cat-change">▲ 8% к прошлому мес.</div></div>
+            </div>
+            <div class="bar"><div class="bar-fill" style="width:70%;background:var(--peach)"></div></div>
+          </div>
+          <div class="card cat-row">
+            <div class="cat-top">
+              <div class="cat-name"><div class="row-mark"><span class="icon" data-icon="film"></span></div>Рестораны</div>
+              <div style="text-align:right"><div class="cat-amount">22 400 ₽</div><div class="cat-change">▼ 4% к прошлому мес.</div></div>
+            </div>
+            <div class="bar"><div class="bar-fill" style="width:45%;background:var(--sage)"></div></div>
+          </div>
+
+          <div class="day-label">Сегодня</div>
+          <div class="card row" style="flex-wrap:wrap;">
+            <div class="row-mark"><span class="icon" data-icon="cart"></span></div>
+            <div class="row-info">
+              <div class="row-name">Пятёрочка <span class="tag personal">Личное</span></div>
+              <div class="row-date">14:22 · Т-Банк</div>
+              <span class="explain-link" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('open')" style="margin-top:4px;">Почему эта категория?</span>
+              <div class="explain-body">Отнёс в «Продукты», потому что похоже на твои прошлые покупки в супермаркетах вечером буднего дня. <b>Можно изменить</b>, если это не так.</div>
+            </div>
+            <div class="row-amount">1 240 ₽</div>
+          </div>
+          <div class="day-label">Вчера</div>
+          <div class="card row"><div class="row-mark"><span class="icon" data-icon="film"></span></div><div class="row-info"><div class="row-name">Кофемания <span class="tag shared">Общее</span></div><div class="row-date">19:05 · Альфа</div></div><div class="row-amount">860 ₽</div></div>
+          <div class="card row"><div class="row-mark"><span class="icon" data-icon="wallet"></span></div><div class="row-info"><div class="row-name">Зарплата</div><div class="row-date">10:00 · Сбер</div></div><div class="row-amount pos">+180 000 ₽</div></div>
+        </div>
+
+        <!-- 3. INSIGHTS -->
+        <div class="view" id="insights">
+          <div class="name">Инсайты</div>
+          <div class="sev-row">
+            <div class="card sev"><div class="sev-num" style="color:var(--coral)">3</div><div class="sev-lbl">Критично</div></div>
+            <div class="card sev"><div class="sev-num" style="color:var(--amber)">5</div><div class="sev-lbl">Стоит внимания</div></div>
+            <div class="card sev"><div class="sev-num" style="color:var(--sage)">4</div><div class="sev-lbl">Хорошие привычки</div></div>
+          </div>
+          <div class="chips">
+            <div class="chip active">Все</div><div class="chip">Критичные</div><div class="chip">По времени</div><div class="chip">По суммам</div>
+          </div>
+
+          <div class="card question-card">
+            <div class="question-text">Подвинуть пятничный лимит на 500 ₽ ниже? Заметил, что в этот день чаще перебор.</div>
+            <div class="question-actions">
+              <button class="qbtn" onclick="this.parentElement.parentElement.querySelector('.question-text').textContent='Хорошо, оставляю как есть. Спрошу в другой раз.'">Не сейчас</button>
+              <button class="qbtn yes" onclick="this.parentElement.parentElement.querySelector('.question-text').textContent='Готово — лимит на пятницу снижен на 500 ₽.'">Да, подвинь</button>
+            </div>
+          </div>
+
+          <div class="card pattern crit">
+            <div class="p-tag">Критично</div>
+            <div class="p-title">Эффект зарплаты</div>
+            <div class="p-desc">В первые 3 дня после зарплаты ты тратишь в 2.3 раза больше, чем в среднем за месяц.</div>
+            <div class="p-save">Потенциальная экономия: 9 000 ₽/мес</div>
+            <div class="p-links">
+              <span class="explain-link" onclick="toggleNext(this,'eb-salary-why')">Почему?</span>
+              <span class="explain-link" style="color:var(--sage)" onclick="toggleNext(this,'eb-salary-rec')">Что делать →</span>
+            </div>
+            <div class="explain-body" id="eb-salary-why">Сравнил 14 транзакций за первые 3 дня после каждой из последних 4 зарплат с твоими обычными буднями. <b>Разница устойчива каждый месяц</b>, поэтому это отмечено как паттерн, а не случайность.</div>
+            <div class="explain-body" id="eb-salary-rec">
+              <div class="rec-title" style="font-size:13.5px;">Дневной лимит на карте</div>
+              <div class="rec-desc">Поможет сгладить траты в первые дни после зарплаты.</div>
+              <div class="rec-foot"><span class="rec-save">+9 000 ₽/мес</span><button class="rec-btn">Настроить</button></div>
+            </div>
+          </div>
+
+          <div class="card pattern mid">
+            <div class="p-tag">Стоит внимания</div>
+            <div class="p-title">Подписки-вампиры</div>
+            <div class="p-desc">Кинопоиск не открывался 2 месяца, а деньги продолжают списываться каждый месяц.</div>
+            <div class="p-save">Потенциальная экономия: 399 ₽/мес</div>
+            <span class="explain-link" style="color:var(--sage)" onclick="toggleNext(this,'eb-kino-rec')">Что делать →</span>
+            <div class="explain-body" id="eb-kino-rec">
+              <div class="rec-title" style="font-size:13.5px;">Отменить Кинопоиск</div>
+              <div class="rec-desc">Можно оформить заново, если снова понадобится.</div>
+              <div class="rec-foot"><span class="rec-save">+399 ₽/мес</span><button class="rec-btn">Отменить</button></div>
+            </div>
+          </div>
+
+          <div class="card pattern mid">
+            <div class="p-tag">Стоит внимания</div>
+            <div class="p-title">Тихая инфляция подписок</div>
+            <div class="p-desc">Яндекс Плюс подорожал на 15% за полгода, а ты продолжаешь платить по старой памяти.</div>
+            <div class="p-save">Потенциальная экономия: 1 200 ₽/мес</div>
+            <span class="explain-link" style="color:var(--sage)" onclick="toggleNext(this,'eb-yandex-rec')">Что делать →</span>
+            <div class="explain-body" id="eb-yandex-rec">
+              <div class="rec-title" style="font-size:13.5px;">Проверить условия подписки</div>
+              <div class="rec-desc">Часто есть более дешёвый тариф с тем же набором функций.</div>
+              <div class="rec-foot"><span class="rec-save">+1 200 ₽/мес</span><button class="rec-btn">Проверить</button></div>
+            </div>
+          </div>
+
+          <div class="card pattern mid">
+            <div class="p-tag">Стоит внимания</div>
+            <div class="p-title">Латте-фактор</div>
+            <div class="p-desc">37 мелких покупок до 500 ₽ за месяц — в сумме почти как отпуск на выходные.</div>
+            <div class="p-save">Потенциальная экономия: 4 100 ₽/мес</div>
+            <span class="explain-link" style="color:var(--sage)" onclick="toggleNext(this,'eb-latte-rec')">Что делать →</span>
+            <div class="explain-body" id="eb-latte-rec">
+              <div class="rec-desc">Не запрет, а мягкое напоминание, когда лимит близко.</div>
+              <div class="rec-foot"><span class="rec-save">+4 100 ₽/мес</span><button class="rec-btn">Настроить</button></div>
+            </div>
+          </div>
+
+          <div class="card pattern good">
+            <div class="p-tag">Хорошая привычка</div>
+            <div class="p-title">Регулярные сбережения</div>
+            <div class="p-desc">Ты откладываешь стабильно уже 4 месяца подряд — так и держать.</div>
+          </div>
+
+          <div class="section-title">Долгосрочная стратегия</div>
+          <div class="card pattern" style="border-left-color:var(--lav);">
+            <div class="p-tag" style="color:var(--lav);">Стоит подумать</div>
+            <div class="p-title">Резервный фонд</div>
+            <div class="p-desc">6 месяцев расходов на отдельном вкладе на случай форс-мажора.</div>
+            <span class="explain-link" style="color:var(--lav);" onclick="go('goals')">Создать цель →</span>
+          </div>
+        </div>
+
+        <!-- 4. FUTURE -->
+        <div class="view" id="future">
+          <div class="back" onclick="go('dashboard')"><span class="icon" data-icon="back"></span></div>
+          <div class="name">Будущее</div>
+          <div class="scenario-pair">
+            <div class="card scenario"><div class="scenario-lbl"><span class="scenario-dot" style="background:var(--ink-faint)"></span>Если ничего не менять</div><div class="scenario-val">2.1 млн ₽</div></div>
+            <div class="card scenario"><div class="scenario-lbl"><span class="scenario-dot" style="background:var(--sage)"></span>По рекомендациям</div><div class="scenario-val" style="color:var(--sage)">3.4 млн ₽</div></div>
+          </div>
+          <div class="card chart-card">
+            <svg viewBox="0 0 300 100" width="100%" height="100">
+              <polyline points="0,80 60,74 120,68 180,60 240,52 300,44" fill="none" stroke="var(--ink-faint)" stroke-width="2"/>
+              <polyline points="0,80 60,68 120,50 180,32 240,16 300,4" fill="none" stroke="var(--sage)" stroke-width="2.6" stroke-linecap="round"/>
+            </svg>
+            <div class="chart-legend"><span>— Текущий сценарий</span><span style="color:var(--sage)">— Оптимальный сценарий</span></div>
+          </div>
+
+          <div class="card slider-card">
+            <div class="slider-top"><span class="slider-name">Отменить подписки</span><span class="slider-val" id="v-sub">2 из 5</span></div>
+            <input type="range" min="0" max="5" value="2" oninput="document.getElementById('v-sub').textContent=this.value+' из 5'">
+            <div class="slider-effect">Освобождает до 1 400 ₽/мес</div>
+          </div>
+          <div class="card slider-card">
+            <div class="slider-top"><span class="slider-name">Сократить рестораны</span><span class="slider-val" id="v-rest">20%</span></div>
+            <input type="range" min="0" max="100" value="20" oninput="document.getElementById('v-rest').textContent=this.value+'%'">
+            <div class="slider-effect">Освобождает до 4 500 ₽/мес</div>
+          </div>
+          <div class="card slider-card">
+            <div class="slider-top"><span class="slider-name">Откладывать дополнительно</span><span class="slider-val" id="v-save">10 000 ₽</span></div>
+            <input type="range" min="0" max="50000" step="1000" value="10000" oninput="document.getElementById('v-save').textContent=Number(this.value).toLocaleString('ru-RU')+' ₽'">
+            <div class="slider-effect">При вкладе под 18% годовых</div>
+          </div>
+
+          <div class="card future-msg">
+            <div class="future-msg-head">Письмо от будущего себя</div>
+            <div class="future-msg-text">«Спасибо, что тогда отказался от такси по пятницам. Сейчас, глядя на квартиру за окном, это кажется мелочью — но именно из таких мелочей она и получилась.» — Алексей, 2036</div>
+          </div>
+        </div>
+
+        <!-- 5. GOALS -->
+        <div class="view" id="goals">
+          <div class="name">Цели</div>
+          <div class="card goal-card" onclick="go('future')">
+            <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="ring-track" cx="26" cy="26" r="22"/><circle class="ring-fg" data-pct="62" stroke="var(--sage)" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2"/></svg><span class="ring-num">62%</span></div>
+            <div class="goal-info"><div class="goal-name">На квартиру</div><div class="goal-sub">1 240 000 ₽ из 2 000 000 ₽ · осталось 14 мес</div></div>
+            <span class="chev icon" data-icon="chevron"></span>
+          </div>
+          <div class="card goal-card">
+            <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="ring-track" cx="26" cy="26" r="22"/><circle class="ring-fg" data-pct="28" stroke="var(--peach)" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2"/></svg><span class="ring-num">28%</span></div>
+            <div class="goal-info"><div class="goal-name">Новый автомобиль</div><div class="goal-sub">560 000 ₽ из 2 000 000 ₽ · осталось 2 года</div></div>
+            <span class="chev icon" data-icon="chevron"></span>
+          </div>
+          <div class="card goal-card">
+            <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="ring-track" cx="26" cy="26" r="22"/><circle class="ring-fg" data-pct="91" stroke="var(--lav)" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2"/></svg><span class="ring-num">91%</span></div>
+            <div class="goal-info"><div class="goal-name">Отпуск в Грузии</div><div class="goal-sub">182 000 ₽ из 200 000 ₽ · осталось 3 недели</div></div>
+            <span class="chev icon" data-icon="chevron"></span>
+          </div>
+          <div class="add-bank"><span class="icon" data-icon="plus"></span>Создать новую цель</div>
+
+          <div class="section-title">Сравнение с друзьями <span class="more" style="color:var(--lav)">анонимно</span></div>
+          <div class="card" style="padding:16px 18px;">
+            <div class="friend-row"><span class="friend-name">Ты</span><div class="friend-bar-track"><div class="friend-bar-fill" style="width:82%;background:var(--sage)"></div></div><span class="friend-val">82%</span></div>
+            <div class="friend-row"><span class="friend-name">Марина</span><div class="friend-bar-track"><div class="friend-bar-fill" style="width:64%;background:var(--track)"></div></div><span class="friend-val">64%</span></div>
+            <div class="friend-row"><span class="friend-name">Игорь</span><div class="friend-bar-track"><div class="friend-bar-fill" style="width:47%;background:var(--track)"></div></div><span class="friend-val">47%</span></div>
+            <div style="font-size:11.5px; color:var(--ink-faint); margin:4px 0 10px;">Сравниваем % дней без импульсивных трат — не суммы и не доходы.</div>
+            <button class="invite-btn"><span class="icon" data-icon="users" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:6px;"></span>Пригласить друга</button>
+          </div>
+        </div>
+
+        <!-- 6. PROFILE -->
+        <div class="view" id="profile">
+          <div class="name">Профиль</div>
+          <div class="card profile-head">
+            <div class="p-avatar"></div>
+            <div><div class="p-name">Алексей Соколов</div><div class="p-email">alexey@mail.ru · Москва</div></div>
+          </div>
+          <div class="stat-grid">
+            <div class="card stat"><div class="stat-label">Активы</div><div class="stat-val">1 920 000 ₽</div></div>
+            <div class="card stat"><div class="stat-label">Обязательства</div><div class="stat-val" style="color:var(--peach)">380 000 ₽</div></div>
+          </div>
+          <div class="section-title">Управление</div>
+          <div class="card settings-row" onclick="go('banks')"><div class="row-mark"><span class="icon" data-icon="bank"></span></div><div class="row-info"><div class="row-name">Банки</div><div class="row-date">4 подключено</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card settings-row" onclick="go('tone')"><div class="row-mark"><span class="icon" data-icon="spark"></span></div><div class="row-info"><div class="row-name">Тон двойника</div><div class="row-date">Мягкий друг</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card settings-row" onclick="go('digest')"><div class="row-mark"><span class="icon" data-icon="send"></span></div><div class="row-info"><div class="row-name">Сводка в мессенджер</div><div class="row-date">Telegram · по воскресеньям</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card settings-row" onclick="go('ai')"><div class="row-mark"><span class="icon" data-icon="chat"></span></div><div class="row-info"><div class="row-name">AI-ассистент <span class="plan-badge">Premium</span></div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card settings-row"><div class="row-mark"><span class="icon" data-icon="lock"></span></div><div class="row-info"><div class="row-name">Безопасность</div><div class="row-date">Face ID включён</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card settings-row"><div class="row-mark"><span class="icon" data-icon="theme"></span></div><div class="row-info"><div class="row-name">Тема оформления</div><div class="row-date">Тёмная</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card settings-row" style="cursor:default;">
+            <div class="row-mark"><span class="icon" data-icon="shield"></span></div>
+            <div class="row-info"><div class="row-name">Локальный анализ</div><div class="row-date">Часть паттернов считается на устройстве</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="card settings-row" onclick="go('personalize')">
+            <div class="row-mark"><span class="icon" data-icon="target"></span></div>
+            <div class="row-info"><div class="row-name">Траты в контексте целей</div><div class="row-date">Выключено</div></div>
+            <span class="chev icon" data-icon="chevron"></span>
+          </div>
+
+          <div class="section-title">Виджет на главном экране</div>
+          <div class="widget-mock">
+            <div class="wtitle">Бюджет на сегодня</div>
+            <div class="wval">2 640 ₽</div>
+          </div>
+        </div>
+
+        <!-- PERSONALIZE: opt-in spending-in-context-of-goals -->
+        <div class="view" id="personalize">
+          <div class="back" onclick="go('profile')"><span class="icon" data-icon="back"></span></div>
+          <div class="name">Траты в контексте целей</div>
+          <div class="empty-note" style="text-align:left; padding:0 2px 16px;">Необязательная фишка — сама решаешь, включать или нет. По умолчанию выключено.</div>
+          <div class="card settings-row" style="cursor:default;">
+            <div class="row-mark"><span class="icon" data-icon="target"></span></div>
+            <div class="row-info"><div class="row-name">Показывать связь с целями</div><div class="row-date">Например, под суммой покупки</div></div>
+            <div class="switch" id="pctx-switch" onclick="togglePersonalize(this)"></div>
+          </div>
+          <div class="section-title">Как это будет выглядеть</div>
+          <div class="card row" style="cursor:default;">
+            <div class="row-mark"><span class="icon" data-icon="film"></span></div>
+            <div class="row-info"><div class="row-name">Кофемания</div><div class="row-date" id="pctx-sub">19:05 · Альфа</div></div>
+            <div class="row-amount">860 ₽</div>
+          </div>
+        </div>
+
+        <!-- 7. BANKS -->
+        <div class="view" id="banks">
+          <div class="back" onclick="go('profile')"><span class="icon" data-icon="back"></span></div>
+          <div class="name">Банки</div>
+          <div class="empty-note" style="text-align:left; padding:0 2px 16px;">Пока без прямого подключения — данные берём из выписок, которые ты присылаешь сам. Это бесплатно и работает уже сегодня.</div>
+          <div class="card bank-row"><div class="bank-logo" style="background:#F0C419">Т</div><div class="row-info"><div class="row-name">Т-Банк</div><div class="bank-status"><span class="status-dot"></span>3 счёта · выписка от 2 июля</div></div><div class="row-amount pos">412 300 ₽</div></div>
+          <div class="card bank-row"><div class="bank-logo" style="background:#2FA84F">С</div><div class="row-info"><div class="row-name">Сбер</div><div class="bank-status"><span class="status-dot"></span>2 счёта · выписка от 2 июля</div></div><div class="row-amount pos">318 900 ₽</div></div>
+          <div class="card bank-row" onclick="go('import-steps')"><div class="bank-logo" style="background:#E8433A">А</div><div class="row-info"><div class="row-name">Альфа-Банк</div><div class="bank-status"><span class="status-dot warn"></span>выписка устарела · обновить</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="add-bank" onclick="go('import-pick')"><span class="icon" data-icon="plus"></span>Добавить банк по выписке</div>
+        </div>
+
+        <!-- 7a. IMPORT: PICK BANK -->
+        <div class="view" id="import-pick">
+          <div class="back" onclick="go('banks')"><span class="icon" data-icon="back"></span></div>
+          <div class="name">Какой банк?</div>
+          <div class="card" style="padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:10px; color:var(--ink-faint); font-size:13px;">
+            <span class="icon" data-icon="help" style="width:16px;height:16px;"></span>Найди свой банк — покажем, как выгрузить выписку
+          </div>
+          <div class="card bank-row" onclick="startImport('ВТБ','#00579F')"><div class="bank-logo" style="background:#00579F">В</div><div class="row-info"><div class="row-name">ВТБ</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card bank-row" onclick="startImport('Райффайзен','#FFCC02')"><div class="bank-logo" style="background:#FFCC02;color:#2B2620;">Р</div><div class="row-info"><div class="row-name">Райффайзен</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card bank-row" onclick="startImport('Озон Банк','#005BFF')"><div class="bank-logo" style="background:#005BFF">О</div><div class="row-info"><div class="row-name">Озон Банк</div></div><span class="chev icon" data-icon="chevron"></span></div>
+          <div class="card bank-row" onclick="startImport('Другой банк','#8D7FC7')"><div class="bank-logo" style="background:var(--lav)">?</div><div class="row-info"><div class="row-name">Другой банк</div><div class="bank-date" style="font-size:11.5px;color:var(--ink-faint);">Универсальная инструкция</div></div><span class="chev icon" data-icon="chevron"></span></div>
+        </div>
+
+        <!-- 7b. IMPORT: STEPS -->
+        <div class="view" id="import-steps">
+          <div class="back" onclick="go('import-pick')"><span class="icon" data-icon="back"></span></div>
+          <div class="name" id="import-bank-name">Выгрузка выписки</div>
+          <div class="section-title">Как получить файл</div>
+          <div class="card row" style="cursor:default;"><div class="row-mark" style="font-family:var(--round);font-weight:700;">1</div><div class="row-info"><div class="row-name">Открой приложение банка</div><div class="row-date">Раздел «История операций» или «Выписки»</div></div></div>
+          <div class="card row" style="cursor:default;"><div class="row-mark" style="font-family:var(--round);font-weight:700;">2</div><div class="row-info"><div class="row-name">Выбери период</div><div class="row-date">Лучше сразу 3–12 месяцев</div></div></div>
+          <div class="card row" style="cursor:default;"><div class="row-mark" style="font-family:var(--round);font-weight:700;">3</div><div class="row-info"><div class="row-name">Экспортируй в CSV или Excel</div><div class="row-date">PDF тоже подойдёт, но CSV разбираем точнее</div></div></div>
+
+          <div class="section-title">Дальше — как удобнее</div>
+          <div class="card" style="padding:16px 18px; margin-bottom:12px; cursor:pointer;" onclick="go('import-processing'); runImport();">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+              <div class="row-mark" style="background:#2AABEE1a; color:#2AABEE;"><span class="icon" data-icon="send"></span></div>
+              <div><div class="row-name">Переслать в Telegram-бота</div><div class="row-date">@dvoinik_bot · разберём за минуту</div></div>
+            </div>
+            <div style="font-size:12px; color:var(--ink-soft); line-height:1.5;">Самый быстрый способ: открой чат с ботом и перешли туда файл выписки прямо из приложения банка.</div>
+          </div>
+          <div class="card" style="padding:20px; text-align:center; border:1.5px dashed var(--ink-faint); background:transparent; box-shadow:none; cursor:pointer;" onclick="go('import-processing'); runImport();">
+            <span class="icon" data-icon="wallet" style="width:22px;height:22px;margin-bottom:8px;"></span>
+            <div style="font-size:13.5px; font-weight:600; margin-bottom:4px;">или загрузить файл здесь</div>
+            <div style="font-size:11.5px; color:var(--ink-faint);">CSV, XLSX, PDF · до 20 МБ</div>
+          </div>
+        </div>
+
+        <!-- 7c. IMPORT: PROCESSING -->
+        <div class="view" id="import-processing">
+          <div class="name">Разбираем выписку</div>
+          <div class="card" style="padding:26px 22px; margin-top:10px;">
+            <div id="import-status" style="font-family:var(--round); font-weight:700; font-size:16px; margin-bottom:16px;">Определяем банк…</div>
+            <div class="bar" style="height:8px;"><div class="bar-fill" id="import-bar" style="width:8%;"></div></div>
+            <div style="font-size:11.5px; color:var(--ink-faint); margin-top:10px;">Обычно занимает меньше минуты</div>
+          </div>
+        </div>
+
+        <!-- 7d. IMPORT: DONE -->
+        <div class="view" id="import-done">
+          <div class="name">Готово 🎉</div>
+          <div class="card" style="padding:22px; text-align:center; margin-bottom:16px;">
+            <div style="font-family:var(--round); font-weight:700; font-size:28px; color:var(--sage); margin-bottom:6px;">218 операций</div>
+            <div style="font-size:12.5px; color:var(--ink-soft);">импортировано из <span id="import-bank-name-2">банка</span> · январь – июнь 2026</div>
+          </div>
+          <div class="section-title">Первые категории</div>
+          <div class="card row" style="cursor:default;"><div class="row-mark"><span class="icon" data-icon="cart"></span></div><div class="row-info"><div class="row-name">Продукты</div><div class="row-date">64 операции</div></div></div>
+          <div class="card row" style="cursor:default;"><div class="row-mark"><span class="icon" data-icon="film"></span></div><div class="row-info"><div class="row-name">Рестораны</div><div class="row-date">31 операция</div></div></div>
+          <button class="invite-btn" style="margin-top:16px;" onclick="go('analytics')">Смотреть аналитику</button>
+        </div>
+
+        <!-- 9. NOTIFICATIONS -->
+        <div class="view" id="notifs">
+          <div class="back" onclick="go(lastView)"><span class="icon" data-icon="back"></span></div>
+          <div class="name">Уведомления</div>
+          <div class="card notif-row"><div class="unread"></div><div class="notif-text"><div class="notif-title">Обнаружен новый паттерн: эффект зарплаты</div><div class="notif-time">2 часа назад</div></div></div>
+          <div class="card notif-row"><div class="unread"></div><div class="notif-text"><div class="notif-title">Через 3 дня платёж ЖКХ — 8 500 ₽</div><div class="notif-time">вчера</div></div></div>
+          <div class="card notif-row"><div class="unread" style="background:transparent"></div><div class="notif-text"><div class="notif-title">Ты копишь 30 дней подряд 🎉</div><div class="notif-time">3 дня назад</div></div></div>
+          <div class="card notif-row"><div class="unread" style="background:transparent"></div><div class="notif-text"><div class="notif-title">Цель «Отпуск в Грузии» выполнена на 91%</div><div class="notif-time">неделю назад</div></div></div>
+        </div>
+
+        <!-- 10. AI ASSISTANT -->
+        <div class="view" id="ai">
+          <div class="back" onclick="go('dashboard')"><span class="icon" data-icon="back"></span></div>
+          <div class="name">AI-ассистент</div>
+          <div class="chat-area">
+            <div class="msg ai">Привет! Спроси меня о своих финансах — например, сколько ты потратил на рестораны в июне.</div>
+            <div class="msg me">Сколько я потратил на рестораны в прошлом месяце?</div>
+            <div class="msg ai">В июне — 22 400 ₽, это на 4% меньше, чем в мае. Основные траты пришлись на выходные вечера.</div>
+          </div>
+          <div class="suggest">
+            <div class="sug-chip">Как накопить на квартиру быстрее?</div>
+            <div class="sug-chip">Что лучше: вклад или инвестиции?</div>
+          </div>
+          <div class="card chat-input">
+            <input type="text" placeholder="Спроси что угодно о своих финансах">
+            <button class="send-btn"><span class="icon" data-icon="send"></span></button>
+          </div>
+        </div>
+
+        <!-- 11. TONE -->
+        <div class="view" id="tone">
+          <div class="back" onclick="go('profile')"><span class="icon" data-icon="back"></span></div>
+          <div class="name">Тон двойника</div>
+          <div class="card" style="padding:4px;">
+            <div class="tone-row">
+              <div class="tone-chip active" onclick="setTone(this,'Похоже, дело в пятничной усталости после дедлайна — с кем не бывает. Могу подсказывать, когда день выходит дороже обычного.')">Мягкий друг</div>
+              <div class="tone-chip" onclick="setTone(this,'Зафиксировано превышение на 68%. Причина — типичный паттерн трат по пятницам. Рекомендую установить лимит.')">Строгий финансист</div>
+              <div class="tone-chip" onclick="setTone(this,'Ну ты вчера разошёлся — на 68% больше обычного. Пятница, дедлайн, всё как всегда.')">Саркастичный приятель</div>
+            </div>
+          </div>
+          <div class="section-title">Как это будет звучать</div>
+          <div class="card bubble" style="cursor:default;">
+            <div class="bubble-head"><div class="avatar"></div><div class="bubble-name">Твой двойник заметил</div></div>
+            <div class="bubble-title">Вчера ты потратил на 68% больше обычного</div>
+            <div class="bubble-text" id="tone-preview">Похоже, дело в пятничной усталости после дедлайна — с кем не бывает. Могу подсказывать, когда день выходит дороже обычного.</div>
+          </div>
+        </div>
+
+        <!-- 12. DIGEST -->
+        <div class="view" id="digest">
+          <div class="back" onclick="go('profile')"><span class="icon" data-icon="back"></span></div>
+          <div class="name">Сводка в мессенджер</div>
+          <div class="card settings-row" style="cursor:default;">
+            <div class="row-mark" style="background:#2AABEE1a; color:#2AABEE;"><span class="icon" data-icon="send"></span></div>
+            <div class="row-info"><div class="row-name">Telegram</div><div class="row-date">Подключено · @alexey_sokolov</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="card settings-row" style="cursor:default;">
+            <div class="row-mark" style="background:var(--track);"><span class="icon" data-icon="chat"></span></div>
+            <div class="row-info"><div class="row-name">MAX</div><div class="row-date">Не подключено</div></div>
+            <div class="switch" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="chips" style="margin-top:16px;">
+            <div class="chip">Каждый день</div><div class="chip active">Раз в неделю</div><div class="chip">Раз в месяц</div>
+          </div>
+
+          <div class="section-title">Так выглядит письмо</div>
+          <div class="card tg-preview">
+            <div class="tg-head">
+              <div class="tg-logo"><span class="icon" data-icon="send"></span></div>
+              <div><div class="tg-name">Двойник</div><div class="tg-sub">бот в Telegram</div></div>
+            </div>
+            <div class="tg-body">
+              <div class="tg-msg">Привет! Вот как прошла неделя 👋<br><br>Потратил 42 350 ₽ — в рамках плана. Есть один момент: после зарплаты траты обычно подскакивают, и в четверг это опять случилось.<br><br>Хорошая новость — отпуск в Грузии уже накоплен на 91%. Ещё пара недель, и можно бронировать билеты.<br><br>Совет на неделю: оставь запас 4 000 ₽ — впереди три платежа подряд.</div>
+              <div class="tg-time">Воскресенье, 20:00</div>
+            </div>
+          </div>
+          <div class="empty-note">Письмо приходит без графиков — только выводы. Всё остальное всегда можно открыть в приложении.</div>
+        </div>
+
+      </div>
+
+      <div class="nav">
+        <div class="nav-pill" id="nav-pill"></div>
+        <div class="nitem active" onclick="go('dashboard',0)"><span class="icon" data-icon="home"></span><span class="lbl">Обзор</span></div>
+        <div class="nitem" onclick="go('analytics',1)"><span class="icon" data-icon="chart"></span><span class="lbl">Аналитика</span></div>
+        <div class="nitem" onclick="go('insights',2)"><span class="icon" data-icon="spark"></span><span class="lbl">Инсайты</span></div>
+        <div class="nitem" onclick="go('goals',3)"><span class="icon" data-icon="target"></span><span class="lbl">Цели</span></div>
+        <div class="nitem" onclick="go('profile',4)"><span class="icon" data-icon="user"></span><span class="lbl">Профиль</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ICONS = {
+  home: '<path d="M4 11.5L12 4l8 7.5V19a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1v-7.5z"/>',
+  home2:'<path d="M4 11.5L12 4l8 7.5V19a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1v-7.5z"/>',
+  chart: '<rect x="4" y="13" width="4" height="7" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/>',
+  spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
+  user: '<circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/>',
+  trend: '<polyline points="4,17 9,11 13,14 20,6"/><polyline points="15,6 20,6 20,11"/><line x1="4" y1="20" x2="20" y2="20" opacity="0.35"/>',
+  bank: '<path d="M3 10l9-6 9 6"/><rect x="4" y="10" width="16" height="9" rx="1"/><line x1="8" y1="10" x2="8" y2="19"/><line x1="12" y1="10" x2="12" y2="19"/><line x1="16" y1="10" x2="16" y2="19"/>',
+  bulb: '<circle cx="12" cy="9.5" r="5.2"/><path d="M9.5 19h5"/><path d="M10.3 21h3.4"/>',
+  bell: '<path d="M6 9.5a6 6 0 0112 0c0 4 1.4 5.2 1.4 5.2H4.6S6 13.5 6 9.5z"/><path d="M10 18.5a2 2 0 004 0"/>',
+  chat: '<path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9l-4.2 3.6V16.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z"/><circle cx="9" cy="10.8" r="0.9" fill="currentColor" stroke="none"/><circle cx="12.5" cy="10.8" r="0.9" fill="currentColor" stroke="none"/><circle cx="16" cy="10.8" r="0.9" fill="currentColor" stroke="none"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><line x1="12" y1="2.5" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="21.5" y2="12"/>',
+  moon: '<path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/>',
+  wallet: '<rect x="3" y="6.5" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><circle cx="17" cy="14" r="1.1" fill="currentColor" stroke="none"/>',
+  down: '<line x1="12" y1="5" x2="12" y2="17"/><polyline points="7,12 12,17 17,12"/>',
+  arrowUp: '<line x1="12" y1="17" x2="12" y2="5"/><polyline points="7,10 12,5 17,10"/>',
+  phone: '<rect x="8" y="3" width="8" height="18" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/>',
+  film: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M10 9.3v5.4l5-2.7z"/>',
+  cart: '<circle cx="10" cy="20" r="1.2" fill="currentColor" stroke="none"/><circle cx="17" cy="20" r="1.2" fill="currentColor" stroke="none"/><path d="M3 4h2l2.2 11.2a2 2 0 002 1.8h8a2 2 0 002-1.8L20 8H6.2"/>',
+  chevron: '<polyline points="9,5 15,12 9,19"/>',
+  back: '<polyline points="15,5 9,12 15,19"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5v-3a4 4 0 018 0v3"/>',
+  theme: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 000 16z" fill="currentColor" stroke="none" opacity="0.5"/>',
+  send: '<line x1="4" y1="12" x2="20" y2="4"/><polygon points="20,4 13,20 10,13 4,10" fill="currentColor" stroke="none"/>',
+  cloud: '<path d="M6.8 18a3.6 3.6 0 01-.5-7.16A5.2 5.2 0 0116.6 9.4a3.9 3.9 0 01-.4 8.6H6.8z"/>',
+  users: '<circle cx="9" cy="9" r="3"/><circle cx="16.5" cy="10.2" r="2.5"/><path d="M3.3 19c0-3 2.6-5.2 5.7-5.2s5.7 2.2 5.7 5.2"/><path d="M15 14.1c2.3.4 3.8 2.2 3.8 4.9"/>',
+  shield: '<path d="M12 3.2l6.5 2.6v4.7c0 4.6-3 8-6.5 9.3-3.5-1.3-6.5-4.7-6.5-9.3V5.8L12 3.2z"/>',
+  help: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.3a2.4 2.4 0 114 1.9c-.9.6-1.6 1.1-1.6 2.3"/><circle cx="12" cy="16.6" r="0.3" fill="currentColor" stroke="none"/>'
+};
+document.querySelectorAll('[data-icon]').forEach(el=>{
+  const name = el.getAttribute('data-icon');
+  if(ICONS[name]) el.innerHTML = '<svg viewBox="0 0 24 24">'+ICONS[name]+'</svg>';
+});
+
+let lastView = 'dashboard';
+function go(id, navIdx){
+  const current = document.querySelector('.view.active');
+  if(current && id === 'notifs') lastView = current.id;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('active', b.dataset.go===id));
+  if(navIdx !== undefined){
+    document.querySelectorAll('.nitem').forEach((n,i)=>n.classList.toggle('active', i===navIdx));
+  } else if(id !== 'notifs'){
+    document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('active'));
+  }
+  document.querySelector('.content').scrollTop = 0;
+  if(id === 'goals') animateRings();
+  movePill();
+}
+function movePill(){
+  const pill = document.getElementById('nav-pill');
+  const active = document.querySelector('.nitem.active');
+  if(!active){ pill.style.opacity = 0; return; }
+  const nav = document.querySelector('.nav');
+  const navRect = nav.getBoundingClientRect();
+  const itemRect = active.getBoundingClientRect();
+  const baseWidth = navRect.width * 0.2; // matches .nav-pill's base width:20%
+  const x = itemRect.left - navRect.left;
+  const scale = itemRect.width / baseWidth;
+  pill.style.opacity = 1;
+  pill.style.transform = `translateX(${x}px) scaleX(${scale})`;
+}
+window.addEventListener('resize', movePill);
+function animateRings(){
+  document.querySelectorAll('#goals .ring-fg').forEach(ring=>{
+    const pct = Number(ring.dataset.pct);
+    const circumference = 138.2;
+    const target = circumference - (pct/100)*circumference;
+    ring.style.transition = 'none';
+    ring.style.strokeDashoffset = circumference;
+    ring.getBoundingClientRect();
+    ring.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1)';
+    requestAnimationFrame(()=>{ ring.style.strokeDashoffset = target; });
+  });
+}
+function toggleNext(el, targetId){
+  event.stopPropagation();
+  const body = document.getElementById(targetId);
+  if(!body) return;
+  const card = body.closest('.card');
+  const wasOpen = body.classList.contains('open');
+  card.querySelectorAll('.explain-body.open').forEach(b=> b.classList.remove('open'));
+  if(!wasOpen) body.classList.add('open');
+}
+function togglePersonalize(el){
+  el.classList.toggle('on');
+  const on = el.classList.contains('on');
+  document.getElementById('pctx-sub').textContent = on ? '19:05 · Альфа · это ~4 часа до отпуска в Грузии' : '19:05 · Альфа';
+}
+function setTone(el, text){
+  document.querySelectorAll('.tone-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tone-preview').textContent = text;
+}
+let currentImportBank = 'банка';
+function startImport(name){
+  currentImportBank = name;
+  document.getElementById('import-bank-name').textContent = name;
+  document.getElementById('import-bank-name-2').textContent = name;
+  go('import-steps');
+}
+function runImport(){
+  const steps = ['Определяем банк…','Разбираем операции…','Раскладываем по категориям…','Почти готово…'];
+  const bar = document.getElementById('import-bar');
+  const status = document.getElementById('import-status');
+  let i = 0;
+  bar.style.width = '8%';
+  status.textContent = steps[0];
+  clearInterval(window._importTimer);
+  window._importTimer = setInterval(()=>{
+    i++;
+    if(i < steps.length){
+      status.textContent = steps[i];
+      bar.style.width = (18 + i*27) + '%';
+    } else {
+      clearInterval(window._importTimer);
+      bar.style.width = '100%';
+      setTimeout(()=> go('import-done'), 400);
+    }
+  }, 750);
+}
+document.querySelectorAll('.sbtn').forEach(b=>{
+  b.addEventListener('click', ()=> go(b.dataset.go, b.dataset.nav!==undefined ? Number(b.dataset.nav) : undefined));
+});
+function toggleTheme(){ document.body.classList.toggle('dark'); document.body.classList.toggle('light'); }
+requestAnimationFrame(()=> requestAnimationFrame(movePill));
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(movePill); }
+</script>
+</body>
+</html>
